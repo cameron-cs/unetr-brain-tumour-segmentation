@@ -1,0 +1,7 @@
+pandas
+h5py
+opencv-python
+matplotlib
+numpy
+torch
+torchvision
