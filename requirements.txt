@@ -3,5 +3,9 @@ h5py
 opencv-python
 matplotlib
 numpy
+tqdm
 torch
 torchvision
+monai
+argparse
+pyyaml

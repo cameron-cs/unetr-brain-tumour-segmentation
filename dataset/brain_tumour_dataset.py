@@ -1,43 +1,28 @@
-import torch
+import os
 from torch.utils.data import Dataset
-import torchvision.transforms as transforms
-
+from PIL import Image
 
 class BrainTumorDataset(Dataset):
-    def __init__(self, images, labels):
-        self.X = images
-        self.y = labels
-
-        self.base_transform = transforms.Compose([
-            transforms.ToPILImage(),
-            transforms.ToTensor()
-        ])
-
-        self.rotation_angles = [45, 90, 120, 180, 270, 300, 330]
-
-        # transforms with rotations
-        self.transforms = [self.base_transform] + [
-            transforms.Compose([
-                transforms.ToPILImage(),
-                transforms.RandomRotation(angle),
-                transforms.ToTensor()
-            ]) for angle in self.rotation_angles
-        ]
+    def __init__(self, image_dir, mask_dir, image_paths, mask_paths, transform=None):
+        self.image_dir = image_dir
+        self.mask_dir = mask_dir
+        self.image_paths = image_paths
+        self.mask_paths = mask_paths
+        self.transform = transform
 
     def __len__(self):
-        # length of the dataset
-        return len(self.X)
+        return len(self.image_paths)
 
     def __getitem__(self, idx):
-        # transformations
-        transformed_images = [transform(self.X[idx]) for transform in self.transforms]
+        img_path = os.path.join(self.image_dir, self.image_paths[idx])
+        mask_path = os.path.join(self.mask_dir, self.mask_paths[idx])
 
-        # one-hot encode the label
-        labels = torch.zeros(4, dtype=torch.float32)
-        labels[int(self.y[idx])] = 1.0
+        image = Image.open(img_path).convert("RGB")
+        mask = Image.open(mask_path).convert("L")
 
-        # repeat the label for each transformed image
-        labels_batch = [labels] * len(transformed_images)
+        if self.transform:
+            image = self.transform(image)
+            mask = self.transform(mask)
 
-        # batch of images and labels
-        return torch.stack(labels_batch), torch.stack(transformed_images)
+        return image, mask
+
